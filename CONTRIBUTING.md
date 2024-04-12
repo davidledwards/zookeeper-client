@@ -6,7 +6,7 @@ In all cases, I reserve the right to accept or deny any suggestions.
 
 ## Bugs
 
-A bug should be reported by opening a new [issue](https://github.com/davidledwards/zookeeper/issues).
+A bug should be reported by opening a new [issue](https://github.com/davidledwards/zookeeper-client/issues).
 
 Provide the following information when creating the issue:
 
@@ -18,7 +18,7 @@ Provide the following information when creating the issue:
 
 ## Enhancements
 
-An enhancement request is proposed by opening a new [issue](https://github.com/davidledwards/zookeeper/issues).
+An enhancement request is proposed by opening a new [issue](https://github.com/davidledwards/zookeeper-client/issues).
 
 Provide the following information as part of the enhancement request:
 

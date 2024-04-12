@@ -45,7 +45,7 @@ lazy val dependencySettings = Seq(
 lazy val docSettings = Seq(
   Compile / doc / scalacOptions ++= Seq("-no-link-warnings"),
   autoAPIMappings := true,
-  apiURL := Some(url(s"https://davidedwards.io/zookeeper/api/${version.value}/"))
+  apiURL := Some(url(s"https://davidedwards.io/zookeeper-client/api/${version.value}/"))
 )
 
 lazy val publishSettings = Seq(
@@ -74,12 +74,12 @@ lazy val rootProject = (project in file(".")).
     organization := "com.loopfor.zookeeper",
     version := "1.7.1",
     description := "Scala API for ZooKeeper",
-    homepage := Some(url("https://github.com/davidledwards/zookeeper")),
+    homepage := Some(url("https://github.com/davidledwards/zookeeper-client")),
     licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
     scmInfo := Some(ScmInfo(
-      url(s"https://github.com/davidledwards/zookeeper/tree/release-${version.value}/zookeeper-client"),
-      "scm:git:https://github.com/davidledwards/zookeeper.git",
-      Some("scm:git:https://github.com/davidledwards/zookeeper.git")
+      url(s"https://github.com/davidledwards/zookeeper-client/tree/release-${version.value}"),
+      "scm:git:https://github.com/davidledwards/zookeeper-client.git",
+      Some("scm:git:https://github.com/davidledwards/zookeeper-client.git")
     ))
   ).
   settings(compilerSettings: _*).
