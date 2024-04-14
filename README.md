@@ -8,7 +8,7 @@ The [original project](https://github.com/davidledwards/zookeeper), which contai
 
 As of version `1.7.1`, this library is published on [GitHub](https://github.com/davidledwards?tab=packages&repo_name=zookeeper-client), which is essentially a Maven-style repository. The aforementioned link provides dependency information. For versions prior to `1.7.1`, this library is published in the [Maven Central Repository](https://search.maven.org/search?q=g:com.loopfor.zookeeper).
 
-API documentation for all versions can be found [here](https://davidedwards.io/zookeeper/).
+API documentation for all versions can be found [here](https://davidedwards.io/zookeeper-client/).
 
 ## Releasing
 
