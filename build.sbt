@@ -59,13 +59,7 @@ lazy val publishSettings = Seq(
       </developer>
     </developers>,
   publishMavenStyle := true,
-  Test / publishArtifact := false,
-  publishTo := Some(
-    if (version.value endsWith "SNAPSHOT")
-      "Sonatype Nexus Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
-    else
-      "Sonatype Nexus Release Repository" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-  )
+  Test / publishArtifact := false
 )
 
 lazy val rootProject = (project in file(".")).
@@ -74,13 +68,16 @@ lazy val rootProject = (project in file(".")).
     organization := "com.loopfor.zookeeper",
     version := "1.7.1",
     description := "Scala API for ZooKeeper",
-    homepage := Some(url("https://github.com/davidledwards/zookeeper-client")),
+    githubOwner := "davidledwards",
+    githubRepository := "zookeeper-client",
+    homepage := Some(url(s"https://github.com/${githubOwner.value}/${githubRepository.value}")),
     licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
     scmInfo := Some(ScmInfo(
-      url(s"https://github.com/davidledwards/zookeeper-client/tree/release-${version.value}"),
-      "scm:git:https://github.com/davidledwards/zookeeper-client.git",
-      Some("scm:git:https://github.com/davidledwards/zookeeper-client.git")
-    ))
+      url(s"https://github.com/${githubOwner.value}/${githubRepository.value}/tree/v${version.value}"),
+      "scm:git:https://github.com/${githubOwner.value}/${name.value}.git",
+      Some(s"scm:git:https://github.com/${githubOwner.value}/${githubRepository.value}.git")
+    )),
+    versionScheme := Some("early-semver")
   ).
   settings(compilerSettings: _*).
   settings(dependencySettings: _*).

@@ -6,108 +6,41 @@ The [original project](https://github.com/davidledwards/zookeeper), which contai
 
 ## Overview
 
-API documentation can be found [here](https://davidedwards.io/zookeeper/api/1.7.1/com/loopfor/zookeeper/index.html).
+As of version `1.7.1`, this library is published on [GitHub](https://github.com/davidledwards?tab=packages&repo_name=zookeeper-client), which is essentially a Maven-style repository. The aforementioned link provides dependency information. For versions prior to `1.7.1`, this library is published in the [Maven Central Repository](https://search.maven.org/search?q=g:com.loopfor.zookeeper).
 
-This library is published in the Maven Central Repository.
+API documentation for all versions can be found [here](https://davidedwards.io/zookeeper/).
 
-* [Scala 2.13](https://repo1.maven.org/maven2/com/loopfor/zookeeper/zookeeper-client_2.13/1.7.1/)
-* [Scala 3](https://repo1.maven.org/maven2/com/loopfor/zookeeper/zookeeper-client_3/1.7.1/)
+## Releasing
 
-## Release
+Releases are published as GitHub Packages. The [release.sh](release.sh) script automates the entire process, which depends on the [GitHub CLI](https://cli.github.com/) being installed.
 
-The following steps are required for publishing a new release either locally or to the Maven Central Repository. It is important to note that these instructions should be carried out for both supported versions of Scala. Switching between Scala versions in `sbt` is accomplished by using the `++` command.
+The version of the release is derived from the version specified in [build.sbt](build.sbt). A new package release will generate a corresponding tag, so the assumption is that the version number has been appropriately incremented. Otherwise, the release creation process will fail. This can happen if the version already exists as a package or the tag already exists.
 
-```shell
-sbt> ++ 2.13
-...
-sbt> ++ 3.2
-...
-```
+If the release process is successful, a new tag of the format `v<version>` is created. For example, if the package version in `build.sbt` is `1.2.3`, then the corresponding tag is `v1.2.3`.
 
-### Building
-
-Ensure that the version number in [build.sbt](build.sbt) is updated. Snapshots should not be published to the Maven Central Repository even though this is perfectly fine when publishing locally.
-
-Compile and test, ensuring that all tests are successful. All compiler warnings should be resolved.
+Once released, push all changes to GitHub.
 
 ```shell
-sbt> compile
-...
-sbt> test
-...
+$ git push origin master
+$ git push --tags origin
 ```
 
-Generate API documentation. These files will be used later when updating the [gh-pages](https://github.com/davidledwards/zookeeper/tree/gh-pages) branch. Since the API documentation is identical for both Scala versions, only the `2.13` version needs to be generated.
+## Documentation
+
+API documentation is managed in the [docs][docs] folder and automatically published when changes are pushed to the `master` branch. Documentation is generated from `sbt`. Make sure all errors and warnings are eliminated.
 
 ```shell
 sbt> doc
 ```
 
-### Publishing
-
-Publishing artifacts to the Maven Central Repository can only be done by the owner of this project, as this action requires credentials. Credentials should be placed in `$HOME/.sbt/1.0/sonatype.sbt` as follows.
-
-```scala
-credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", "<user>", "<password>")
-```
-
-Sonatype requires that artifacts be signed before publishing. The [sbt-pgp](https://github.com/sbt/sbt-pgp) site provides instructions for generating a GPG key pair.
-
-Consider publishing the signed artifacts locally before releasing to Sonatype.
+Create a new folder under [docs/api](docs/api) whose name matches the new version number. Then, copy the contents of the API documentation generated earlier under this new folder.
 
 ```shell
-sbt> publishLocalSigned  # sign and publish to local repo
-sbt> publishSigned       # sign and publish to Sonatype
+$ mkdir docs/api/<version>
+$ cp -r target/scala-2.13/api/* docs/api/<version>
 ```
 
-### Sonatype
-
-Login to <https://oss.sonatype.org>. Click on `Staging Repositories` in the left panel, select the staged repository, and click `Close`. After a few minutes, refresh the page and click `Release` assuming all checks passed. The staged repository can always be dropped by clicking `Drop`.
-
-Once released, it could take several hours before the artifacts appear in the [Maven Central Repository](https://central.sonatype.com).
-
-### Finalizing
-
-Once the signed artifacts have been uploaded to and released on Sonatype, merge `develop` into `master`, ideally using a fast-forward merge.
-
-```shell
-$ git checkout master
-$ git merge --ff-only develop
-```
-
-Switch to `master` and create a new tag using the convention `release-<version>`.
-
-```shell
-$ git tag -a release-<version> -m "release version <version>"
-```
-
-Finally, push all changes to GitHub.
-
-```shell
-$ git push --all origin
-$ git push --tags origin
-```
-
-### Documentation
-
-Switch to the `gh-pages` branch where the API documentation is kept.
-
-```shell
-$ git switch gh-pages
-```
-
-Create a new folder under `api/` whose name matches the new version number. Then, copy the contents of the API documentation generated earlier under this new folder.
-
-```shell
-$ mkdir api/<version>
-$ cp -r target/scala-2.13/api/* api/<version>
-```
-
-Add a link to the new version of documentation in `index.html`. It should be intuitively obvious how to do this. When finished, commit and push changes.
-
-```shell
-$ git push origin gh-pages
-```
+Add a link to the new version of documentation in [docs/index.html](docs/index.html). It should be intuitively obvious how to do this. When finished, commit and push changes.
 
 ## Contributing
 
