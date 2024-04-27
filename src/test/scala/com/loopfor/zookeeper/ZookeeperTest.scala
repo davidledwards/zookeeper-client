@@ -17,6 +17,8 @@ package com.loopfor.zookeeper
 
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class ZookeeperTest extends ZookeeperSuite {
   private val EmptyData = Array[Byte]()
@@ -40,6 +42,81 @@ class ZookeeperTest extends ZookeeperSuite {
     val timeout = session.timeout
     assert(timeout !== null)
     assert(timeout.toNanos > 0)
+  }
+
+  test("sync: create node") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    assert(p === path)
+  }
+
+  test("async: create node") { root =>
+    val path = root.resolve("node_1").path
+    val p = Await.result(zk.async.create(path, EmptyData, ACL.AnyoneAll, Persistent), 100.millis)
+    assert(p === path)
+  }
+
+  test("sync: delete node with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    zk.sync.delete(p, Some(status.version))
+  }
+
+  test("async: delete node with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    Await.result(zk.async.delete(p, Some(status.version)), 100.millis)
+  }
+
+  test("sync: delete node without version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    zk.sync.delete(p, None)
+  }
+
+  test("async: delete node without version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    Await.result(zk.async.delete(p, None), 100.millis)
+  }
+
+  test("sync: set/get value with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    zk.sync.set(p, TestData, Some(status.version))
+    val (data, _) = zk.sync.get(p)
+    assert(data === TestData)
+  }
+
+  test("async: set/get value with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    val r = zk.async.set(p, TestData, Some(status.version))
+    Await.result(r, 100.millis)
+    val (data, _) = Await.result(zk.async.get(p), 100.millis)
+    assert(data === TestData)
+  }
+
+  test("sync: node exists") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val s = zk.sync.exists(p)
+    assert(!s.isEmpty)
+    val t = zk.sync.exists(p + "-missing")
+    assert(t.isEmpty)
+  }
+
+  test("async: node exists") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val s = Await.result(zk.async.exists(p), 100.millis)
+    assert(!s.isEmpty)
+    val t = Await.result(zk.async.exists(p + "-missing"), 100.millis)
+    assert(t.isEmpty)
   }
 
   test("persistent, non-recursive watch on node") { root =>
@@ -91,7 +168,7 @@ class ZookeeperTest extends ZookeeperSuite {
     e match {
       case ChildrenChanged(p) => assert(p === root.path)
     }
-  
+
     // Since watch is non-recursive, creation of grandchild must not trigger watch.
     zk.sync.create(root.resolve("child_0/grandchild").path, TestData, ACL.AnyoneAll, Persistent)
     e = event.poll(10, MILLISECONDS)
