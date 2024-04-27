@@ -808,7 +808,8 @@ private object ExistsHandler {
   def apply(p: Promise[Option[Status]]) = new AsyncCallback.StatCallback {
     def processResult(rc: Int, path: String, context: Object, stat: Stat): Unit = {
       (Code.get(rc): @unchecked) match {
-        case Code.OK => p.success(if (stat == null) None else Some(Status(path, stat)))
+        case Code.OK => p.success(Some(Status(path, stat)))
+        case Code.NONODE => p.success(None)
         case code => p.failure(ZException.create(code))
       }
     }
