@@ -66,7 +66,7 @@ lazy val rootProject = (project in file(".")).
   settings(
     name := "zookeeper-client",
     organization := "com.loopfor.zookeeper",
-    version := "1.7.1",
+    version := "1.7.2",
     description := "Scala API for ZooKeeper",
     githubOwner := "davidledwards",
     githubRepository := "zookeeper-client",
