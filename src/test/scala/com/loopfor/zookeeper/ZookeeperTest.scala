@@ -119,6 +119,117 @@ class ZookeeperTest extends ZookeeperSuite {
     assert(t.isEmpty)
   }
 
+  test("node dispositions") { root =>
+    val tests = Seq[(String, Disposition, (String, Status) => Unit)] (
+      ("persistent", Persistent, { (p, s) =>
+          assert(s.ephemeralOwner === 0)
+        }),
+      ("persistent-ttl", PersistentTimeToLive(1.second), { (p, s) =>
+          assert(s.ephemeralOwner === 0)
+        }),
+      ("persistent-sequential", PersistentSequential, { (p, s) =>
+          assert(s.ephemeralOwner === 0)
+          // Path of created node should have sequence number as suffix, hence verification that prefix
+          // substring is equivalent to path provided by caller.
+          assert(s.path.length > p.length && s.path.startsWith(p))
+        }),
+      ("persistent-sequential-ttl", PersistentSequentialTimeToLive(1.second), { (p, s) =>
+          assert(s.ephemeralOwner === 0)
+          // Path of created node should have sequence number as suffix, hence verification that prefix
+          // substring is equivalent to path provided by caller.
+          assert(s.path.length > p.length && s.path.startsWith(p))
+        }),
+      ("ephemeral", Ephemeral, { (p, s) =>
+          assert(s.ephemeralOwner !== 0)
+        }),
+      ("ephemeral-sequential", EphemeralSequential, { (p, s) =>
+          assert(s.ephemeralOwner !== 0)
+          // Path of created node should have sequence number as suffix, hence verification that prefix
+          // substring is equivalent to path provided by caller.
+          assert(s.path.length > p.length && s.path.startsWith(p))
+        }),
+      ("container", Container, { (p, s) =>
+          assert(s.ephemeralOwner === 0)
+        })
+    )
+
+    tests.foreach { case (p, d, fn) =>
+      val path = root.resolve(p).path
+      val _p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, d)
+      zk.sync.exists(_p).map { fn(path, _) } match {
+        case None => fail(s"$path")
+        case _ =>
+      }
+    }
+  }
+
+  test("sync: get children of node") { root =>
+    // Veirfy root node has no children.
+    assert(zk.sync.children(root.path).length === 0)
+
+    // Create and verify existence of child nodes.
+    val paths = Seq("node_0", "node_1", "node_2")
+    paths.foreach { case p =>
+      val path = root.resolve(p).path
+      zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    }
+
+    val childs = zk.sync.children(root.path)
+    assert(childs.length === paths.length)
+    childs.foreach { p => assert(paths.contains(p)) }
+  }
+
+  test("async: get children of node") { root =>
+    // Veirfy root node has no children.
+    val (empty, _) = Await.result(zk.async.children(root.path), 100.millis)
+    assert(empty.length === 0)
+
+    // Create and verify existence of child nodes.
+    val paths = Seq("node_0", "node_1", "node_2")
+    paths.foreach { case p =>
+      val path = root.resolve(p).path
+      zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    }
+
+    val (childs, _) = Await.result(zk.async.children(root.path), 100.millis)
+    assert(childs.length === paths.length)
+    childs.foreach { p => assert(paths.contains(p)) }
+  }
+
+  test("sync: set/get ACL with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    val _status = zk.sync.setACL(p, ACL.AnyoneRead, Some(status.version))
+    val (acl, _) = zk.sync.getACL(p)
+    assert(acl === ACL.AnyoneRead)
+  }
+
+  test("async: set/get ACL with version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    val (_, status) = zk.sync.get(p)
+    val _status = Await.result(zk.async.setACL(p, ACL.AnyoneRead, Some(status.version)), 100.millis)
+    val (acl, _) = Await.result(zk.async.getACL(p), 100.millis)
+    assert(acl === ACL.AnyoneRead)
+  }
+
+  test("sync: set/get ACL without version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    zk.sync.setACL(p, ACL.AnyoneRead, None)
+    val (acl, _) = zk.sync.getACL(p)
+    assert(acl === ACL.AnyoneRead)
+  }
+
+  test("async: set/get ACL without version") { root =>
+    val path = root.resolve("node_0").path
+    val p = zk.sync.create(path, EmptyData, ACL.AnyoneAll, Persistent)
+    Await.result(zk.async.setACL(p, ACL.AnyoneRead, None), 100.millis)
+    val (acl, _) = Await.result(zk.async.getACL(p), 100.millis)
+    assert(acl === ACL.AnyoneRead)
+  }
+
   test("persistent, non-recursive watch on node") { root =>
     // Use blocking queue to relay events from watcher.
     val event = new LinkedBlockingQueue[NodeEvent](1)
