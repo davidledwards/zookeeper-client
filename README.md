@@ -27,7 +27,7 @@ $ git push --tags origin
 
 ## Documentation
 
-API documentation is managed in the [docs][docs] folder and automatically published when changes are pushed to the `master` branch. Documentation is generated from `sbt`. Make sure all errors and warnings are eliminated.
+API documentation is managed in the [docs](docs) folder and automatically published when changes are pushed to the `master` branch. Documentation is generated from `sbt`. Make sure all errors and warnings are eliminated.
 
 ```shell
 sbt> doc
